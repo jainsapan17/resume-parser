@@ -2,8 +2,8 @@
 """
 Status: working
 Author: Sapan Jain
-Version: 1.1
-Version_updates: Creating 1st version to perform document analysis
+Version: 1.2
+Version_updates: Get Job role as input
 Usage: Python code to analyze uploaded document
 Date: 2024-11-25
 Dependencies: 
@@ -63,26 +63,63 @@ def upload_to_s3(file_bytes, original_filename, bucket_name=BUCKET_NAME):
         st.error(f"Error uploading file to S3: {e}")
         return None, None
 # ------------------------------- #
+def parse_resume(text):
+    # Placeholder for resume parsing logic
+    # This function should be implemented based on the specific resume format
+    # and the desired output
+    # For demonstration purposes, we'll just return the text as-is
+    pass
+# ------------------------------- #
 def main():
     st.title("Resume Analyzer")
-    
-    uploaded_file = st.file_uploader("Choose a file", type=["pdf", "png", "jpg", "jpeg"])
 
-    if uploaded_file is not None:
-        file_bytes = uploaded_file.read()
-        original_filename = uploaded_file.name
-        try:
-            st.write("Uploading file to S3 bucket...")
-            bucket_name, file_name = upload_to_s3(file_bytes, original_filename)
+    # Use session state to track form submission
+    if "form_submitted" not in st.session_state:
+        st.session_state["form_submitted"] = False
 
-            st.write("Extracting text from uploaded document...")
-            parsed_text = analyze_document(file_bytes, original_filename, bucket_name)
+    # 1. Enter Desired Job Role ----->>>
+    with st.form("job_description_form"):
+        # Multi-line text area
+        job_description = st.text_area(
+            "Enter your desired job role and its description:",
+            height=300,
+        )
+        # Submit button
+        job_description_submitted = st.form_submit_button("Submit")
 
-            st.subheader("Extracted Text:")
-            st.write(parsed_text)
+    if job_description_submitted:
+        # Persist form submission state
+        st.session_state["form_submitted"] = True
+        st.session_state["job_description"] = job_description
+        st.success("Job description submitted successfully!")
 
-        except Exception as e:
-            st.error(f"An error occurred: {e}")
+    # 2. Upload Resume ----->>>
+    if st.session_state.get("form_submitted", False):
+        uploaded_file = st.file_uploader(
+            "Upload your resume",
+            type=["pdf", "png", "jpg", "jpeg"],
+        )
+
+        # 3. Analyze Resume ----->>>
+        if uploaded_file is not None:
+            file_bytes = uploaded_file.read()
+            original_filename = uploaded_file.name
+
+            try:
+                st.info("Uploading resume to S3 bucket...")
+                bucket_name, file_name = upload_to_s3(file_bytes, original_filename)
+
+                st.info("Extracting text from uploaded resume...")
+                parsed_text = analyze_document(file_bytes, original_filename, bucket_name)
+
+                st.subheader("Extracted Text:")
+                st.write(parsed_text)
+
+            except Exception as e:
+                st.error(f"An error occurred: {e}")
+        else:
+            st.warning("Please upload a resume to proceed.")
+
 
 # ------------------------------- #
 if __name__ == "__main__":
