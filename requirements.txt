@@ -1,0 +1,6 @@
+streamlit
+boto3
+pandas
+textract-trp
+botocore
+amazon-textract-response-parser
