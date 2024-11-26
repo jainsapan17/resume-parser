@@ -2,8 +2,8 @@
 """
 Status: Working
 Author: Sapan Jain
-Version: 1.0
-Version_updates: Code to analyze_resume
+Version: 2.1
+Version_updates: Added conditions to catch errors and updated hyperparameters
 Usage: Python code to analyze uploaded resume against desired job description
 Date: 2024-11-26
 Dependencies: 
@@ -22,7 +22,7 @@ from datetime import datetime
 from botocore.exceptions import ClientError
 # ------------------------------- #
 AWS_REGION = 'us-east-1'
-BUCKET_NAME = 'my-aws-bucket'
+BUCKET_NAME = 'sapanjai-test-bucket'
 MODEL_ID = 'anthropic.claude-v2'
 # ------------------------------- #
 textract_client = boto3.client('textract', region_name=AWS_REGION)
@@ -71,9 +71,9 @@ def analyze_resume(bedrock_client, model_id, prompt, max_tokens=2000):
     body = json.dumps({
         "prompt": prompt,
         "max_tokens_to_sample": max_tokens,
-        "temperature": 0.5,
+        "temperature": 0.3,
         "top_k": 250,
-        "top_p": 1,
+        "top_p": 0.9,
         "stop_sequences": ["\n\nHuman:"]
     })
     
@@ -118,6 +118,13 @@ def main():
 
         # 3. Analyze Resume ----->>>
         if uploaded_file is not None:
+            file_extension = uploaded_file.name.split('.')[-1].lower()
+            supported_extensions = ["pdf", "png", "jpg", "jpeg"]
+            
+            if file_extension not in supported_extensions:
+                st.error(f"Unsupported file type: .{file_extension}. Please upload a PDF, PNG, JPG, or JPEG file.")
+                return  # Stop execution if file type is not supported
+
             file_bytes = uploaded_file.read()
             original_filename = uploaded_file.name
 
@@ -125,11 +132,18 @@ def main():
                 st.info("Uploading resume to S3 bucket...")
                 bucket_name, file_name = upload_to_s3(file_bytes, original_filename)
 
+                if bucket_name is None or file_name is None:
+                    st.error("Failed to upload file to S3. Please try again.")
+                    return  # Stop execution if S3 upload fails
+
                 st.info("Extracting text from uploaded resume...")
                 parsed_text = extract_resume_text(file_bytes, original_filename, bucket_name)
 
-                # st.subheader("Extracted Text:")
-                # st.write(parsed_text)
+                if not parsed_text:
+                    st.error("Failed to extract text from the resume. Please check the file and try again.")
+                    return  # Stop execution if text extraction fails
+
+                st.info("Analyzing the resume...")
                 prompt = f"{SYSTEM_PROMPT}\n\nHuman: Resume: {parsed_text}\n\nJob Description: {job_description}. Assistant:"
                 response_container = st.empty()
                 full_response = ""
@@ -142,7 +156,6 @@ def main():
                 st.error(f"An error occurred: {e}")
         else:
             st.warning("Please upload a resume to proceed.")
-
 # ------------------------------- #
 if __name__ == "__main__":
     main()
