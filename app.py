@@ -17,14 +17,12 @@ from prompt import SYSTEM_PROMPT
 import streamlit as st
 import boto3
 import json
-import pandas as pd
-import time
 from io import BytesIO
 from datetime import datetime
 from botocore.exceptions import ClientError
 # ------------------------------- #
 AWS_REGION = 'us-east-1'
-BUCKET_NAME = 'sapanjai-test-bucket'
+BUCKET_NAME = 'aws-bucket-name'
 MODEL_ID = 'anthropic.claude-v2'
 # ------------------------------- #
 textract_client = boto3.client('textract', region_name=AWS_REGION)
