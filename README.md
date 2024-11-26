@@ -24,12 +24,12 @@ The Resume Analyzer is a Python application that analyzes uploaded resumes again
 4. Provide AI-generated insights on resume-job match
 
 ## Setup
-2. Ensure you have Python 3.12 installed
+1. Ensure you have Python 3.12 installed
 2. [Optional] Create a virtualenv
-    `python3 -m venv .venv`
-    `source .venv/bin/activate`
+	`python3 -m venv .venv`
+	`source .venv/bin/activate`
 3. Install required dependencies:
-   `pip install -r requirements.txt`
+	`pip install -r requirements.txt`
 4. Set up AWS credentials with access to Textract, S3, and Bedrock services
 5. Configure AWS region and S3 bucket name in the script
 
@@ -37,11 +37,11 @@ The Resume Analyzer is a Python application that analyzes uploaded resumes again
 - AWS_REGION : Provide the AWS region where you want to run this application
 - BUCKET_NAME : Provide the existing S3 bucket name which will be used to store the uploaded resume
 - MODEL_ID : Provide the Bedrock AI Model ID that you want to use. Current default is 'anthropic.claude-v2'
-    *Please note that if you update the MODEL_ID, then do update the prompt within code to match the required syntax of the choosen model*
+	- *Please note that if you update the MODEL_ID, then do update the prompt within code to match the required syntax of the choosen model*
 
 ## Usage
 1. Run the Streamlit app:
-    `streamlit run app.py`
+	`streamlit run app.py`
 2. Open the provided URL in your web browser
 3. Enter the desired job description
 4. Upload your resume
