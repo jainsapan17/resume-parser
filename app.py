@@ -2,8 +2,8 @@
 """
 Status: working
 Author: Sapan Jain
-Version: 1.2
-Version_updates: Get Job role as input
+Version: 1.3
+Version_updates: Added parse_resume function
 Usage: Python code to analyze uploaded document
 Date: 2024-11-25
 Dependencies: 
@@ -13,17 +13,21 @@ Dependencies:
 # ============================== #
 import streamlit as st
 import boto3
+import json
 import pandas as pd
 import time
 from io import BytesIO
 from datetime import datetime
 from botocore.exceptions import ClientError
+
 # ------------------------------- #
 AWS_REGION = 'us-east-1'
 BUCKET_NAME = 'sapanjai-test-bucket'
+MODEL_ID = 'anthropic.claude-v2'
 # ------------------------------- #
 textract_client = boto3.client('textract', region_name=AWS_REGION)
 s3_client = boto3.client('s3', region_name=AWS_REGION)
+bedrock_client = boto3.client(service_name="bedrock-runtime", region_name="us-east-1")
 # ------------------------------- #
 def analyze_document(file_bytes, file_name, bucket_name):
     try:
@@ -63,12 +67,24 @@ def upload_to_s3(file_bytes, original_filename, bucket_name=BUCKET_NAME):
         st.error(f"Error uploading file to S3: {e}")
         return None, None
 # ------------------------------- #
-def parse_resume(text):
-    # Placeholder for resume parsing logic
-    # This function should be implemented based on the specific resume format
-    # and the desired output
-    # For demonstration purposes, we'll just return the text as-is
-    pass
+def parse_resume(bedrock_client, model_id, prompt, max_tokens=2000):
+    body = json.dumps({
+        "prompt": prompt,
+        "max_tokens_to_sample": max_tokens,
+        "temperature": 0.5,
+        "top_k": 250,
+        "top_p": 1,
+        "stop_sequences": ["\n\nHuman:"]
+    })
+    
+    response = bedrock_client.invoke_model_with_response_stream(
+        modelId=model_id,
+        body=body
+    )
+    
+    for event in response.get('body'):
+        chunk = json.loads(event['chunk']['bytes'].decode())
+        yield chunk['completion']
 # ------------------------------- #
 def main():
     st.title("Resume Analyzer")
@@ -112,14 +128,20 @@ def main():
                 st.info("Extracting text from uploaded resume...")
                 parsed_text = analyze_document(file_bytes, original_filename, bucket_name)
 
-                st.subheader("Extracted Text:")
-                st.write(parsed_text)
+                # st.subheader("Extracted Text:")
+                # st.write(parsed_text)
+                prompt = f"Compare the following resume to the job description and rate the match from 0 to 100:\n\nHuman: Resume: {parsed_text}\n\nJob Description: {job_description}. Assistant:"
+                response_container = st.empty()
+                full_response = ""
+                for response_chunk in parse_resume(bedrock_client, MODEL_ID, prompt):
+                    full_response += response_chunk
+                    response_container.markdown(full_response + "▌")
+                response_container.markdown(full_response)
 
             except Exception as e:
                 st.error(f"An error occurred: {e}")
         else:
             st.warning("Please upload a resume to proceed.")
-
 
 # ------------------------------- #
 if __name__ == "__main__":
