@@ -2,8 +2,10 @@
 """
 Status: Working
 Author: Sapan Jain
-Version: 2.1
-Version_updates: Added conditions to catch errors and updated hyperparameters
+Version: 2.2
+Version_updates: 
+    - Added conditions to catch errors and updated hyperparameters
+    - Added sample resumes
 Usage: Python code to analyze uploaded resume against desired job description
 Date: 2024-11-26
 Dependencies: 
