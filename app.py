@@ -2,9 +2,9 @@
 """
 Status: Working
 Author: Sapan Jain
-Version: 1.4
-Version_updates: Adding system prompt
-Usage: Python code to analyze uploaded document
+Version: 1.0
+Version_updates: Code to analyze_resume
+Usage: Python code to analyze uploaded resume against desired job description
 Date: 2024-11-26
 Dependencies: 
     - Python 3.12
@@ -22,14 +22,14 @@ from datetime import datetime
 from botocore.exceptions import ClientError
 # ------------------------------- #
 AWS_REGION = 'us-east-1'
-BUCKET_NAME = 'sapanjai-test-bucket'
+BUCKET_NAME = 'my-aws-bucket'
 MODEL_ID = 'anthropic.claude-v2'
 # ------------------------------- #
 textract_client = boto3.client('textract', region_name=AWS_REGION)
 s3_client = boto3.client('s3', region_name=AWS_REGION)
-bedrock_client = boto3.client(service_name="bedrock-runtime", region_name="us-east-1")
+bedrock_client = boto3.client(service_name="bedrock-runtime", region_name=AWS_REGION)
 # ------------------------------- #
-def analyze_document(file_bytes, file_name, bucket_name):
+def extract_resume_text(file_bytes, file_name, bucket_name):
     try:
         response = textract_client.detect_document_text(
             Document={
@@ -67,7 +67,7 @@ def upload_to_s3(file_bytes, original_filename, bucket_name=BUCKET_NAME):
         st.error(f"Error uploading file to S3: {e}")
         return None, None
 # ------------------------------- #
-def parse_resume(bedrock_client, model_id, prompt, max_tokens=2000):
+def analyze_resume(bedrock_client, model_id, prompt, max_tokens=2000):
     body = json.dumps({
         "prompt": prompt,
         "max_tokens_to_sample": max_tokens,
@@ -126,14 +126,14 @@ def main():
                 bucket_name, file_name = upload_to_s3(file_bytes, original_filename)
 
                 st.info("Extracting text from uploaded resume...")
-                parsed_text = analyze_document(file_bytes, original_filename, bucket_name)
+                parsed_text = extract_resume_text(file_bytes, original_filename, bucket_name)
 
                 # st.subheader("Extracted Text:")
                 # st.write(parsed_text)
                 prompt = f"{SYSTEM_PROMPT}\n\nHuman: Resume: {parsed_text}\n\nJob Description: {job_description}. Assistant:"
                 response_container = st.empty()
                 full_response = ""
-                for response_chunk in parse_resume(bedrock_client, MODEL_ID, prompt):
+                for response_chunk in analyze_resume(bedrock_client, MODEL_ID, prompt):
                     full_response += response_chunk
                     response_container.markdown(full_response + "▌")
                 response_container.markdown(full_response)
