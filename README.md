@@ -26,10 +26,10 @@ The Resume Analyzer is a Python application that analyzes uploaded resumes again
 ## Setup
 1. Ensure you have Python 3.12 installed
 2. [Optional] Create a virtualenv
-	`python3 -m venv .venv`
-	`source .venv/bin/activate`
+    - `python3 -m venv .venv`
+	- `source .venv/bin/activate`
 3. Install required dependencies:
-	`pip install -r requirements.txt`
+	- `pip install -r requirements.txt`
 4. Set up AWS credentials with access to Textract, S3, and Bedrock services
 5. Configure AWS region and S3 bucket name in the script
 
@@ -41,7 +41,7 @@ The Resume Analyzer is a Python application that analyzes uploaded resumes again
 
 ## Usage
 1. Run the Streamlit app:
-	`streamlit run app.py`
+	- `streamlit run app.py`
 2. Open the provided URL in your web browser
 3. Enter the desired job description
 4. Upload your resume
