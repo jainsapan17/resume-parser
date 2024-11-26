@@ -1,16 +1,17 @@
 # ============================== #
 """
-Status: working
+Status: Working
 Author: Sapan Jain
-Version: 1.3
-Version_updates: Added parse_resume function
+Version: 1.4
+Version_updates: Adding system prompt
 Usage: Python code to analyze uploaded document
-Date: 2024-11-25
+Date: 2024-11-26
 Dependencies: 
     - Python 3.12
     - other within requirements.txt
 """
 # ============================== #
+from prompt import SYSTEM_PROMPT
 import streamlit as st
 import boto3
 import json
@@ -19,7 +20,6 @@ import time
 from io import BytesIO
 from datetime import datetime
 from botocore.exceptions import ClientError
-
 # ------------------------------- #
 AWS_REGION = 'us-east-1'
 BUCKET_NAME = 'sapanjai-test-bucket'
@@ -130,7 +130,7 @@ def main():
 
                 # st.subheader("Extracted Text:")
                 # st.write(parsed_text)
-                prompt = f"Compare the following resume to the job description and rate the match from 0 to 100:\n\nHuman: Resume: {parsed_text}\n\nJob Description: {job_description}. Assistant:"
+                prompt = f"{SYSTEM_PROMPT}\n\nHuman: Resume: {parsed_text}\n\nJob Description: {job_description}. Assistant:"
                 response_container = st.empty()
                 full_response = ""
                 for response_chunk in parse_resume(bedrock_client, MODEL_ID, prompt):
