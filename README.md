@@ -66,7 +66,7 @@ Working
 Sapan Jain
 
 ## Version
-1.0 [Added code to analyze resumes]
+2.0
 
 ## Date
 2024-11-26
